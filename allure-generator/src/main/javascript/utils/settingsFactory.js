@@ -26,6 +26,8 @@ const treePluginDefaults = {
     ascending: true,
     sorter: "sorter.name",
   },
+  groupingMode: 'Select an option',
+  allowedGroupingTagPrefix: 'groupBy',
 };
 
 const widgetGridPluginDefaults = {
@@ -124,6 +126,18 @@ function getSettingsForTreePlugin(pluginName, defaults = treePluginDefaults) {
 
     setVisibleMarks(value) {
       return this.save("visibleMarks", value);
+    },
+
+    getAllowedGroupingTagPrefix() {
+      return this.get("allowedGroupingTagPrefix");
+    },
+
+    getGroupingMode() {
+      return this.get("groupingMode");
+    },
+
+    setGroupingMode(value) {
+      return this.save("groupingMode", value);
     },
 
     getTreeSorting() {

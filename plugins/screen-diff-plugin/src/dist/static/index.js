@@ -98,7 +98,6 @@
                 .then(this.renderScreenDiffView.bind(this), this.renderErrorView.bind(this));
         },
         renderErrorView: function (error) {
-            console.log(error);
             this.showChildView(
                 'subView',
                 new ErrorView({

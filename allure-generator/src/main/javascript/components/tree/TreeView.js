@@ -1,5 +1,5 @@
-import "./styles.scss";
 import { View } from "backbone.marionette";
+import { DEFAULT_OPTIONS_GROUPING_MODE } from "../../data/grouping-mode";
 import getComparator from "../../data/tree/comparator";
 import { byCriteria, byMark, byStatuses, mix } from "../../data/tree/filter";
 import { behavior, className, on } from "../../decorators";
@@ -7,6 +7,8 @@ import router from "../../router";
 import hotkeys from "../../utils/hotkeys";
 import { SEARCH_QUERY_KEY } from "../node-search/NodeSearchView";
 import template from "./TreeView.hbs";
+import "./styles.scss";
+
 
 @className("tree")
 @behavior("TooltipBehavior", { position: "bottom" })
@@ -19,6 +21,8 @@ class TreeView extends View {
     this.routeState = routeState;
     this.baseUrl = baseUrl;
     this.tabName = tabName;
+    this.rootname = null;
+
     this.setState();
     this.listenTo(this.routeState, "change:treeNode", this.selectNode);
     this.listenTo(this.routeState, "change:testResultTab", this.render);
@@ -129,7 +133,10 @@ class TreeView extends View {
   }
 
   findElement(treeNode) {
-    if (treeNode.testResult) {
+    if (treeNode.testResult && this.rootname) {
+      const rootname = `[data-rootname='${this.rootname}']`;
+      return this.$(`[data-uid='${treeNode.testResult}'][data-parentUid='${treeNode.testGroup}']${rootname}`);
+    } else if (treeNode.testResult) {
       return this.$(`[data-uid='${treeNode.testResult}'][data-parentUid='${treeNode.testGroup}']`);
     } else {
       return this.$(`[data-uid='${treeNode.testGroup}']`);
@@ -140,6 +147,13 @@ class TreeView extends View {
   onNodeClick(e) {
     const node = this.$(e.currentTarget);
     const uid = node.data("uid");
+    const clickedRootname = node.data("rootname");
+
+    // set rootname for finding element
+    if (clickedRootname) {
+      this.rootname = clickedRootname;
+    }
+
     this.changeState(uid, !this.state.has(uid));
     node.parent().toggleClass("node__expanded");
   }
@@ -190,7 +204,120 @@ class TreeView extends View {
     }
   }
 
+  onDestroy() {
+    this.rootname = null;
+  }
+
+  transformGroupedData(groupedData) {
+    const transformedData = [];
+
+    for (const tag in groupedData) {
+      if (Object.prototype.hasOwnProperty.call(groupedData, tag)) {
+        const group = {
+          name: tag,
+          children: [],
+          uid: null,
+          statistic: {
+            broken: 0,
+            failed: 0,
+            passed: 0,
+            skipped: 0,
+            unknown: 0,
+          },
+          time: {
+            duration: 0,
+            maxDuration: 0,
+            minDuration: 0,
+            start: 0,
+            stop: 0,
+            sumDuration: 0,
+          }
+        };
+
+        for (const obj of groupedData[tag]) {
+          const item = obj.ancestor;
+          group.children.push(item);
+          group.uid = this.generateUID();
+
+          group.statistic.broken += item.statistic.broken;
+          group.statistic.failed += item.statistic.failed;
+          group.statistic.passed += item.statistic.passed;
+          group.statistic.skipped += item.statistic.skipped;
+          group.statistic.unknown += item.statistic.unknown;
+
+          group.time.duration += item.time.duration;
+          group.time.maxDuration += item.time.maxDuration;
+          group.time.minDuration += item.time.minDuration;
+          group.time.start += item.time.start;
+          group.time.stop += item.time.stop;
+          group.time.sumDuration += item.time.sumDuration;
+        }
+
+        transformedData.push(group);
+      }
+    }
+
+    return transformedData;
+  }
+
+  generateUID() {
+    return 'xxxx-xxxx-xxxx-xxxx'.replace(/[x]/g, function(c) {
+      const r = Math.floor(Math.random() * 16); // Use Math.floor instead of bitwise
+      const v = c === 'x' ? r : (r % 4 + 8); // Use strict equality and avoid bitwise
+      return v.toString(16);
+    });
+  }
+
+  groupByTags() {
+    const data = this.collection.toJSON()[0];
+    const grouped = {};
+    this.groupAncestorsByTags(data, grouped);
+    const addParentCategoryToChilds = this.transformGroupedData(grouped);
+    return addParentCategoryToChilds;
+  }
+
+  groupAncestorsByTags(node, groupedData = {}, parent = null, grandParent = null) {
+    // if the node is undefined
+    if (!node) {
+      return;
+    }
+
+    // If the current node has tags, it's a leaf node we want
+    if (node.tags && node.tags.length > 0 && parent && grandParent) {
+      const allowedPrefix = this.settings.getAllowedGroupingTagPrefix();
+
+      for (const tag of node.tags) {
+        if (!tag.startsWith(allowedPrefix)) {
+          continue;
+        }
+
+        if (!groupedData[tag]) {
+          groupedData[tag] = [];
+        }
+        // Create an object containing both grandParent's UID and the parent (ancestor) object
+        const ancestorInfo = {
+          grandParentUid: grandParent.uid,
+          ancestor: parent
+        };
+        // Add the ancestorInfo object to the tag's list if not already included
+        if (!groupedData[tag].some(item => item.ancestor.uid === parent.uid)) {
+          groupedData[tag].push(ancestorInfo);
+        }
+      }
+    }
+
+    // If the node has children, recursively call this function on each child
+    // Pass the current node as the parent and the current parent as the grandparent
+    if (node.children) {
+      node.children.forEach(child => {
+        this.groupAncestorsByTags(child, groupedData, node, parent);
+      });
+    }
+  }
+
   templateContext() {
+    const isGroupingEnabled = !DEFAULT_OPTIONS_GROUPING_MODE.includes(this.settings.getGroupingMode());
+
     return {
       cls: this.className,
       baseUrl: this.baseUrl,
@@ -201,6 +328,8 @@ class TreeView extends View {
       tabName: this.tabName,
       items: this.collection.toJSON(),
       testResultTab: this.routeState.get("testResultTab") || "",
+      isGroupingModeEnabled: isGroupingEnabled,
+      groupedData: this.groupByTags(),
     };
   }
 }

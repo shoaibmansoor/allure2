@@ -27,3 +27,20 @@ cucumber-html-reports
 
 #Mac OS stuff
 .DS_Store
+/test-data
+allure-generator/test-data/allure3
+*.class
+*.yml
+*.properties
+*.txt
+*.xml
+*.json
+*.png
+*.csv
+*.trx
+*.plist
+*.zip
+*.jar
+*.ftl
+*.uri
+*.plist

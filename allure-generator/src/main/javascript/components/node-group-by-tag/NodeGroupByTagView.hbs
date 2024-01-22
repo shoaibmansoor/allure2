@@ -1,0 +1,10 @@
+<div class="grouping-mode">
+    <label for="groupby-dropdown">group by:</label>
+    <select id="groupby-dropdown">
+        {{!-- <option value="">Select a tag</option> --}}
+        <option selected disabled>Select an option</option>
+        {{#each options}}
+            <option value="{{this}}">{{this}}</option>
+        {{/each}}
+    </select>
+</div>

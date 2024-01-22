@@ -1,20 +1,22 @@
-import "./styles.scss";
 import { Model } from "backbone";
 import { View } from "backbone.marionette";
 import { behavior, className, on, regions } from "../../decorators";
 import gtag from "../../utils/gtag";
 import { getSettingsForTreePlugin } from "../../utils/settingsFactory";
 import MarksToggleView from "../marks-toggle/MarksToggleView";
+import NodeGroupingMode from "../node-group-by-tag/NodeGroupByTagView";
 import NodeSearchView from "../node-search/NodeSearchView";
 import NodeSorterView from "../node-sorter/NodeSorterView";
 import StatusToggleView from "../status-toggle/StatusToggleView";
 import TreeView from "../tree/TreeView";
 import template from "./TreeViewContainer.hbs";
+import "./styles.scss";
 
 @className("tree")
 @behavior("TooltipBehavior", { position: "bottom" })
 @regions({
   search: ".pane__search",
+  groupingMode: ".tree__grouping-mode",
   sorter: ".tree__sorter",
   filter: ".tree__filter",
   filterMarks: ".tree__filter-marks",
@@ -70,6 +72,14 @@ class TreeViewContainer extends View {
       "sorter",
       new NodeSorterView({
         settings: this.settings,
+      }),
+    );
+    this.showChildView(
+      "groupingMode",
+      new NodeGroupingMode({
+        settings: this.settings,
+        tabName: this.tabName,
+        collection: this.collection,
       }),
     );
     this.showChildView(

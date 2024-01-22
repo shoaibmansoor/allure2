@@ -4,7 +4,7 @@ module.exports = {
     node: true,
     es6: true,
   },
-  extends: ["eslint:recommended", "prettier"],
+  extends: [ "prettier"],
   parser: "babel-eslint",
   parserOptions: {
     ecmaVersion: 2017,
@@ -59,8 +59,8 @@ module.exports = {
     "no-bitwise": "error",
     "no-caller": "error",
     "no-cond-assign": "error",
-    "no-console": "error",
-    "no-debugger": "error",
+    // "no-console": "error",
+    // "no-debugger": "error",
     "no-empty": "off",
     "no-eval": "error",
     "no-fallthrough": "off",
@@ -94,7 +94,7 @@ module.exports = {
     ],
     "prefer-const": "error",
     "prefer-template": "error",
-    quotes: ["error", "double", { avoidEscape: true }],
+    // quotes: ["error", { avoidEscape: true }],
     radix: "error",
     "sort-imports": ["error", { ignoreDeclarationSort: true, ignoreCase: true }],
     "space-before-function-paren": [
