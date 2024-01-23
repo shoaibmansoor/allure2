@@ -62,3 +62,21 @@ Allure Report can build unified reports for dozens of testing tools across eleve
 This project exists thanks to all the people who contributed. [[Contribute]](.github/CONTRIBUTING.md).
 
 <a href="https://github.com/allure-framework/allure2/graphs/contributors"><img src="https://opencollective.com/allure-report/contributors.svg?avatarHeight=24&width=890&showBtn=false" /></a>
+
+
+## Debugging:
+Steps:
+-  Execute `gradle build && gradle run` after every change in allure-generator folder
+
+## Publishing
+- gradle build
+- Upload generated jars on release from :
+    - allure-generator/build/libs/allure-generator-2.26.0.jar 
+    - allure-commandline/build/libs/allure-commandline-2.26.0.jar
+-  Submit
+
+- Open allure-extras repo
+- Check if any changes needed there
+- if changes needed, increase the package version
+- npm login
+- npm submit
